@@ -15,7 +15,7 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:5500', // Frontend URL
+  origin: 'frontend-skb.vercel.app', // Frontend URL
   credentials: true // Allow cookies
 }));
 
