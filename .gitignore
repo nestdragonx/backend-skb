@@ -1,0 +1,13 @@
+# === ENV files ===
+.env
+.env.*
+*.env
+*.env.*
+
+# Jangan abaikan contoh env
+!.env.example
+!.env.sample
+
+# === Node dependencies ===
+node_modules/
+**/node_modules/
