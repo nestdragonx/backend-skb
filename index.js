@@ -230,8 +230,7 @@ app.delete("/images/:id", verifyToken, async (req, res) => {
 
 // --- TEST ROUTES ---
 app.get("/", (_req, res) => {
-  const hash = bcrypt.hashSync("@AdminSKB!", 10);
-  res.json({ message: "Backend SKB aktif 🚀",hash});
+  res.json({ message: "Backend SKB aktif 🚀"});
 });
 
 // update peserta paket route
