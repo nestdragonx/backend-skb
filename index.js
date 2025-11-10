@@ -76,7 +76,7 @@ app.post("/login", async (req, res) => {
    res.cookie('token', token, {
     httpOnly: true,
     secure: true, // true jika HTTPS (kalau sudah pulish)
-    sameSite: 'lax',
+    sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000
   });
   return res.json({ message: "Login berhasil", success: true  });
