@@ -75,7 +75,7 @@ app.post("/login", async (req, res) => {
   // set cookies 
    res.cookie('token', token, {
     httpOnly: true,
-    secure: false, // true jika HTTPS (kalau sudah pulish)
+    secure: true, // true jika HTTPS (kalau sudah pulish)
     sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000
   });
