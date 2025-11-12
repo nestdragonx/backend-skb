@@ -15,7 +15,7 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: 'https://skbwilayah1padang.vercel.app/', // Frontend URL
+  origin: 'https://skbwilayah1padang.vercel.app', // Frontend URL
   credentials: true // Allow cookies
 }));
 
