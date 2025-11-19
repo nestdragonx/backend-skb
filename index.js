@@ -15,8 +15,8 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  // origin: 'https://skbwilayah1padang.vercel.app',
-  origin: 'http://localhost:5500',
+  origin: 'https://skbwilayah1padang.vercel.app',
+  // origin: 'http://localhost:5500',
   credentials: true // Allow cookies
 }));
 
