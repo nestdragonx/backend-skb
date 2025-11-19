@@ -141,27 +141,21 @@ app.post(
       });
 
       // === UPLOAD PDF KE CLOUDINARY ===
-      const uploadPDF = new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: "magang", resource_type: "raw", use_filename: true },
-          (err, result) => (err ? reject(err) : resolve(result))
-        );
-        streamifier.createReadStream(pdfFile.buffer).pipe(stream);
-      });
+      // === UPLOAD PDF KE CLOUDINARY (versi benar, mempertahankan .pdf) ===
+const uploadPDF = new Promise((resolve, reject) => {
+  const stream = cloudinary.uploader.upload_stream(
+    {
+      folder: "magang",
+      resource_type: "raw",
+      use_filename: true,
+      unique_filename: false,
+      filename_override: pdfFile.originalname, // memastikan ekstensi tetap
+    },
+    (err, result) => (err ? reject(err) : resolve(result))
+  );
 
-      const imageResult = await uploadImage;
-      const pdfResult = await uploadPDF;
-
-      res.json({
-        success: true,
-        message: "Image & PDF berhasil diupload",
-        data: {
-          imageUrl: imageResult.secure_url,
-          pdfUrl: pdfResult.secure_url,
-          cloudinaryId: imageResult.public_id,
-          pdfCloudinaryId: pdfResult.public_id
-        }
-      });
+  streamifier.createReadStream(pdfFile.buffer).pipe(stream);
+});
     } catch (err) {
       console.error("Upload error:", err);
       res.status(500).json({ success: false, error: "Gagal upload file" });
