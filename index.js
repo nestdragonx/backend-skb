@@ -15,7 +15,8 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: 'https://skbwilayah1padang.vercel.app', // Frontend URL
+  // origin: 'https://skbwilayah1padang.vercel.app',
+  origin: 'http://localhost:5500',
   credentials: true // Allow cookies
 }));
 
@@ -110,36 +111,63 @@ app.get("/verifyToken", (req, res) => {
 // --- IMAGE ROUTES ---
 
 // Upload & Save to Database
-app.post("/upload",verifyToken, upload.single("image"), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, error: "Field 'image' wajib berisi file" });
-    }
-
-
-    // Upload ke Cloudinary dari buffer via upload_stream
-    const result = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        { folder: "magang", resource_type: "image", use_filename: true },
-        (err, resUpload) => (err ? reject(err) : resolve(resUpload))
-      );
-      streamifier.createReadStream(req.file.buffer).pipe(stream);
-    });
-
-
-    return res.json({
-      success: true,
-      message: "Gambar berhasil diupload",
-      data: {
-        imageUrl: result.secure_url,
-        cloudinaryId: result.public_id
+app.post(
+  "/upload",
+  verifyToken,
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "pdf", maxCount: 1 }
+  ]),
+  async (req, res) => {
+    try {
+      // Validasi
+      if (!req.files || !req.files.image || !req.files.pdf) {
+        return res.status(400).json({
+          success: false,
+          error: "Field 'image' dan 'pdf' wajib diisi"
+        });
       }
-    });
-  } catch (err) {
-    console.error("Upload error:", err);
-    return res.status(500).json({ success: false, error: "Gagal upload gambar" });
+
+      const imageFile = req.files.image[0];
+      const pdfFile = req.files.pdf[0];
+
+      // === UPLOAD IMAGE KE CLOUDINARY ===
+      const uploadImage = new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "magang", resource_type: "image", use_filename: true },
+          (err, result) => (err ? reject(err) : resolve(result))
+        );
+        streamifier.createReadStream(imageFile.buffer).pipe(stream);
+      });
+
+      // === UPLOAD PDF KE CLOUDINARY ===
+      const uploadPDF = new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "magang", resource_type: "raw", use_filename: true },
+          (err, result) => (err ? reject(err) : resolve(result))
+        );
+        streamifier.createReadStream(pdfFile.buffer).pipe(stream);
+      });
+
+      const imageResult = await uploadImage;
+      const pdfResult = await uploadPDF;
+
+      res.json({
+        success: true,
+        message: "Image & PDF berhasil diupload",
+        data: {
+          imageUrl: imageResult.secure_url,
+          pdfUrl: pdfResult.secure_url,
+          cloudinaryId: imageResult.public_id,
+          pdfCloudinaryId: pdfResult.public_id
+        }
+      });
+    } catch (err) {
+      console.error("Upload error:", err);
+      res.status(500).json({ success: false, error: "Gagal upload file" });
+    }
   }
-});
+);
 
 // Get All Images (Public)
 app.get("/images", async (req, res) => {
@@ -157,12 +185,12 @@ app.get("/images", async (req, res) => {
 });
 app.post("/images", verifyToken, async (req, res) => {
   try {
-    const { imageAlt,  imageUrl, cloudinaryId } = req.body;
+    const { imageAlt,  imageUrl, cloudinaryId, title, description, pdfUrl, pdfCloudinaryId} = req.body;
     const col =  mongoose.connection.db.collection('web data')
     const imageId = uuidv4();
     const updateResult = await col.updateOne(
       {},
-      { $push: { images: {imageId: imageId,imageAlt: imageAlt, imageUrl: imageUrl, createdAt: new Date(), updatedAt: new Date(), cloudinaryId} } },
+      { $push: { images: {imageId: imageId,imageAlt: imageAlt, imageUrl: imageUrl, createdAt: new Date(), updatedAt: new Date(), cloudinaryId, title, description, pdfUrl, pdfCloudinaryId} } },
       { upsert: true }
     );
     if (updateResult.modifiedCount === 0 && updateResult.upsertedCount === 0) {
